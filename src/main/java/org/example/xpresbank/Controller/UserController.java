@@ -1,54 +1,78 @@
 package org.example.xpresbank.Controller;
 
 import org.example.xpresbank.DTO.RegisterUserDTO;
+import org.example.xpresbank.DTO.UserDTO;
+import org.example.xpresbank.Service.AuthService;
 import org.example.xpresbank.Service.UserService;
+import org.example.xpresbank.Utils.AuthUtils;
+import org.example.xpresbank.Entity.User;
 import org.example.xpresbank.VM.UserVM;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final AuthService authService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuthService authService) {
         this.userService = userService;
+        this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public UserVM register(@RequestBody RegisterUserDTO registerUserDTO) {
-        return userService.register(registerUserDTO);
-    }
-
-    @PostMapping("/login")
-    public String login(@RequestBody Map<String, String> loginData) {
-        String username = loginData.get("username");
-        String password = loginData.get("password");
-        return userService.login(username, password);
-    }
-
-    @GetMapping("/user")
-    public UserVM getLoggedInUser(@RequestHeader("Authorization") String authorizationHeader) {
+    private void checkAdminPermission(String authorizationHeader) {
         String token = authorizationHeader.substring("Bearer ".length()).trim();
-        return userService.getLoggedInUser(token);
+
+        User user = authService.getUserFromSession(token);
+
+        if (!AuthUtils.hasRole(user, "ADMIN")) {
+            throw new SecurityException("Unauthorized. Only ADMIN users can perform this action.");
+        }
     }
 
-    @PostMapping("/logout")
-    public String logout(@RequestHeader("Authorization") String authorizationHeader) {
-        String token = authorizationHeader.substring("Bearer ".length()).trim();
-        userService.logout(token);
-        return "User logged out successfully";
+    @PostMapping("/create")
+    public ResponseEntity<UserVM> createUser(@RequestHeader("Authorization") String authorizationHeader,
+                                             @RequestBody RegisterUserDTO registerUserDTO) {
+        checkAdminPermission(authorizationHeader);
+        UserVM userVM = userService.createUser(registerUserDTO);
+        return ResponseEntity.ok(userVM);
     }
 
-    @PostMapping("/restricted-action")
-    public ResponseEntity<String> testAction(@RequestHeader("Authorization") String authorizationHeader) {
-        String token = authorizationHeader.substring("Bearer ".length()).trim();
-        userService.testPermisson(token);
-        return ResponseEntity.ok("Action  successfully.");
+    @GetMapping
+    public ResponseEntity<List<UserDTO>> getAllUsers(@RequestHeader("Authorization") String authorizationHeader) {
+        checkAdminPermission(authorizationHeader);
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDTO> getUserById(@RequestHeader("Authorization") String authorizationHeader,
+                                               @PathVariable Long userId) {
+        checkAdminPermission(authorizationHeader);
+        UserDTO user = userService.getUserById(userId);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<UserVM> updateUser(@RequestHeader("Authorization") String authorizationHeader,
+                                             @PathVariable Long userId,
+                                             @RequestBody RegisterUserDTO registerUserDTO) {
+        checkAdminPermission(authorizationHeader);
+        UserVM updatedUser = userService.updateUser(userId, registerUserDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<String> deleteUser(@RequestHeader("Authorization") String authorizationHeader,
+                                             @PathVariable Long userId) {
+        checkAdminPermission(authorizationHeader);
+        userService.deleteUser(userId);
+        return ResponseEntity.ok("User deleted successfully");
     }
 }

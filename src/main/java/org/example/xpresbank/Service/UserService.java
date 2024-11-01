@@ -2,8 +2,8 @@ package org.example.xpresbank.Service;
 
 import jakarta.transaction.Transactional;
 import org.example.xpresbank.DTO.RegisterUserDTO;
+import org.example.xpresbank.DTO.UserDTO;
 import org.example.xpresbank.Entity.Enums.RoleType;
-import org.example.xpresbank.Entity.Permission;
 import org.example.xpresbank.Entity.Role;
 import org.example.xpresbank.Entity.User;
 import org.example.xpresbank.Exception.UserNotFoundException;
@@ -14,17 +14,16 @@ import org.example.xpresbank.VM.UserVM;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
-    private final Map<String, User> sessions = new HashMap<>();
 
     @Autowired
     public UserService(UserRepository userRepository, RoleRepository roleRepository, UserMapper userMapper) {
@@ -34,7 +33,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserVM register(RegisterUserDTO registerUserDTO) {
+    public UserVM createUser(RegisterUserDTO registerUserDTO) {
         Role role = roleRepository.findByName(RoleType.valueOf(registerUserDTO.getRole()))
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + registerUserDTO.getRole()));
 
@@ -42,46 +41,51 @@ public class UserService {
         newUser.setRole(role);
 
         User savedUser = userRepository.save(newUser);
-        return userMapper.toUserVM(savedUser, "Registration successful");
+        return userMapper.toUserVM(savedUser, "User created successfully");
     }
 
-    public String login(String username, String password) {
-        Optional<User> user = userRepository.findByUsername(username);
-
-        if (user.isPresent() && user.get().getPassword().equals(password)) {
-            String token = UUID.randomUUID().toString();
-            sessions.put(token, user.get());
-            return token;
-        } else {
-            throw new UserNotFoundException("Invalid username or password");
-        }
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toUserDTO)
+                .collect(Collectors.toList());
     }
 
-    public UserVM getLoggedInUser(String token) {
-        User user = sessions.get(token);
-        if (user == null) {
-            throw new UserNotFoundException("User not logged in or token is invalid");
-        }
-        return userMapper.toUserVM(user, "User retrieved successfully");
+    public UserDTO getUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        return userMapper.toUserDTO(user);
     }
 
-    public void logout(String token) {
-        if (!sessions.containsKey(token)) {
-            throw new UserNotFoundException("Invalid session token provided for logout");
-        }
-        sessions.remove(token);
-    }
-
-    public boolean hasPermission(User user, String permissionName) {
-        return user.getRole().getPermissions().stream()
-                .anyMatch(permission -> permission.getName().equals(permissionName));
-    }
     @Transactional
-    public void testPermisson(String token) {
-        User user = sessions.get(token);
-        if (user == null || !hasPermission(user, "USER_READ")) {
-            throw new UserNotFoundException("You do not have permission to perform this action.");
-        }
+    public UserVM updateUser(Long userId, RegisterUserDTO registerUserDTO) {
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
+        existingUser.setUsername(registerUserDTO.getUsername());
+        existingUser.setEmail(registerUserDTO.getEmail());
+        existingUser.setActive(registerUserDTO.isActive());
+
+        Role role = roleRepository.findByName(RoleType.valueOf(registerUserDTO.getRole()))
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + registerUserDTO.getRole()));
+        existingUser.setRole(role);
+
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toUserVM(updatedUser, "User updated successfully");
+    }
+
+
+
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+        userRepository.delete(user);
+    }
+
+
+
+    public User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
     }
 }
