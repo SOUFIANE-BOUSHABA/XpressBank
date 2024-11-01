@@ -2,14 +2,15 @@ package org.example.xpresbank.Service;
 
 import jakarta.transaction.Transactional;
 import org.example.xpresbank.DTO.RegisterUserDTO;
-import org.example.xpresbank.DTO.UserDTO;
 import org.example.xpresbank.Entity.Enums.RoleType;
+import org.example.xpresbank.Entity.Permission;
 import org.example.xpresbank.Entity.Role;
 import org.example.xpresbank.Entity.User;
 import org.example.xpresbank.Exception.UserNotFoundException;
 import org.example.xpresbank.Mapper.UserMapper;
 import org.example.xpresbank.Repository.RoleRepository;
 import org.example.xpresbank.Repository.UserRepository;
+import org.example.xpresbank.VM.UserVM;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,14 +34,15 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO register(RegisterUserDTO registerUserDTO) {
+    public UserVM register(RegisterUserDTO registerUserDTO) {
         Role role = roleRepository.findByName(RoleType.valueOf(registerUserDTO.getRole()))
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + registerUserDTO.getRole()));
 
         User newUser = userMapper.fromRegisterUserDTO(registerUserDTO);
         newUser.setRole(role);
 
-        return userMapper.toUserDTO(userRepository.save(newUser));
+        User savedUser = userRepository.save(newUser);
+        return userMapper.toUserVM(savedUser, "Registration successful");
     }
 
     public String login(String username, String password) {
@@ -55,12 +57,12 @@ public class UserService {
         }
     }
 
-    public UserDTO getLoggedInUser(String token) {
+    public UserVM getLoggedInUser(String token) {
         User user = sessions.get(token);
         if (user == null) {
             throw new UserNotFoundException("User not logged in or token is invalid");
         }
-        return userMapper.toUserDTO(user);
+        return userMapper.toUserVM(user, "User retrieved successfully");
     }
 
     public void logout(String token) {
@@ -68,5 +70,18 @@ public class UserService {
             throw new UserNotFoundException("Invalid session token provided for logout");
         }
         sessions.remove(token);
+    }
+
+    public boolean hasPermission(User user, String permissionName) {
+        return user.getRole().getPermissions().stream()
+                .anyMatch(permission -> permission.getName().equals(permissionName));
+    }
+    @Transactional
+    public void testPermisson(String token) {
+        User user = sessions.get(token);
+        if (user == null || !hasPermission(user, "USER_READ")) {
+            throw new UserNotFoundException("You do not have permission to perform this action.");
+        }
+
     }
 }

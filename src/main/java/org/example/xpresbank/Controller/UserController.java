@@ -1,9 +1,10 @@
 package org.example.xpresbank.Controller;
 
 import org.example.xpresbank.DTO.RegisterUserDTO;
-import org.example.xpresbank.DTO.UserDTO;
 import org.example.xpresbank.Service.UserService;
+import org.example.xpresbank.VM.UserVM;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,7 +21,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public UserDTO register(@RequestBody RegisterUserDTO registerUserDTO) {
+    public UserVM register(@RequestBody RegisterUserDTO registerUserDTO) {
         return userService.register(registerUserDTO);
     }
 
@@ -32,7 +33,7 @@ public class UserController {
     }
 
     @GetMapping("/user")
-    public UserDTO getLoggedInUser(@RequestHeader("Authorization") String authorizationHeader) {
+    public UserVM getLoggedInUser(@RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.substring("Bearer ".length()).trim();
         return userService.getLoggedInUser(token);
     }
@@ -42,5 +43,12 @@ public class UserController {
         String token = authorizationHeader.substring("Bearer ".length()).trim();
         userService.logout(token);
         return "User logged out successfully";
+    }
+
+    @PostMapping("/restricted-action")
+    public ResponseEntity<String> testAction(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = authorizationHeader.substring("Bearer ".length()).trim();
+        userService.testPermisson(token);
+        return ResponseEntity.ok("Action  successfully.");
     }
 }
