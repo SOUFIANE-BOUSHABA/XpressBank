@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.xpresbank.Entity.Enums.AccountStatus;
 
+import java.util.Set;
+
 @Entity
 @Table(name = "accounts")
 @Getter
@@ -32,4 +34,11 @@ public class Account {
     private User user;
 
 
+    @OneToMany(mappedBy = "sourceAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Transaction> outgoingTransactions;
+
+    @OneToMany(mappedBy = "destinationAccount", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Transaction> incomingTransactions;
 }
+
+
