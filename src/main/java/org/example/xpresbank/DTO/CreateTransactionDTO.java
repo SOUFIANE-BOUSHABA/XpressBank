@@ -2,6 +2,8 @@ package org.example.xpresbank.DTO;
 
 import lombok.*;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @Builder
@@ -12,4 +14,6 @@ public class CreateTransactionDTO {
     private String destinationAccountNumber;
     private String type;
     private double amount;
+    private String frequency;
+    private Date endDate;
 }

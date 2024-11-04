@@ -2,6 +2,7 @@ package org.example.xpresbank.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.xpresbank.Entity.Enums.Frequency;
 import org.example.xpresbank.Entity.Enums.TransactionType;
 
 import java.util.Date;
@@ -50,4 +51,10 @@ public class Transaction {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date nextScheduledDate;
+
+    @Enumerated(EnumType.STRING)
+    private Frequency frequency;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date endDate;
 }
