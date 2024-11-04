@@ -1,7 +1,7 @@
 package org.example.xpresbank.Mapper;
 
-import org.example.xpresbank.DTO.UserDTO;
 import org.example.xpresbank.DTO.RegisterUserDTO;
+import org.example.xpresbank.DTO.UserDTO;
 import org.example.xpresbank.Entity.User;
 import org.example.xpresbank.VM.UserVM;
 import org.springframework.stereotype.Component;
@@ -25,6 +25,11 @@ public class UserMapper {
                 .password(registerUserDTO.getPassword())
                 .email(registerUserDTO.getEmail())
                 .active(registerUserDTO.isActive())
+                .age(registerUserDTO.getAge())
+                .monthlyIncome(registerUserDTO.getMonthlyIncome())
+                .creditScore(registerUserDTO.getCreditScore())
+                .debtToIncomeRatio(registerUserDTO.getDebtToIncomeRatio())
+                .bankingDuration(registerUserDTO.getBankingDuration())
                 .build();
     }
 

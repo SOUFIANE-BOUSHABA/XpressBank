@@ -14,4 +14,10 @@ public class RegisterUserDTO {
     private boolean active;
     private String role;
 
+
+    private int age;
+    private double monthlyIncome;
+    private int creditScore;
+    private double debtToIncomeRatio;
+    private int bankingDuration;
 }

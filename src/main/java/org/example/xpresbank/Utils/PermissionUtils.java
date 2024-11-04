@@ -37,6 +37,10 @@ public class PermissionUtils {
         }
     }
 
+    public boolean isAdminOrEmployee(User user) {
+        return AuthUtils.hasRole(user, "ADMIN") || AuthUtils.hasRole(user, "EMPLOYEE");
+    }
+
     private String extractToken(String authorizationHeader) {
         return authorizationHeader.substring("Bearer ".length()).trim();
     }
