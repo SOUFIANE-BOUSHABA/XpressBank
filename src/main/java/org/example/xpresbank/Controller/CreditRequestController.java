@@ -73,6 +73,7 @@ public class CreditRequestController {
         String token = authorizationHeader.substring("Bearer ".length()).trim();
         User user = authService.getUserFromSession(token);
 
+
         if (!permissionUtils.isAdminOrEmployee(user)) {
             throw new SecurityException("Unauthorized. Only ADMIN or EMPLOYEE users can approve/reject credit requests.");
         }
