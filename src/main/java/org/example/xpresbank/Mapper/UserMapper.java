@@ -16,6 +16,11 @@ public class UserMapper {
                 .email(user.getEmail())
                 .active(user.isActive())
                 .role(user.getRole().getName().name())
+                .age(user.getAge())
+                .monthlyIncome(user.getMonthlyIncome())
+                .creditScore(user.getCreditScore())
+                .debtToIncomeRatio(user.getDebtToIncomeRatio())
+                .bankingDuration(user.getBankingDuration())
                 .build();
     }
 
