@@ -71,4 +71,11 @@ public class AccountService {
         }
         accountRepository.delete(account);
     }
+
+
+
+    public List<AccountDTO> getAllAccounts() {
+        List<Account> accounts = accountRepository.findAll();
+        return accounts.stream().map(accountMapper::toAccountDTO).collect(Collectors.toList());
+    }
 }

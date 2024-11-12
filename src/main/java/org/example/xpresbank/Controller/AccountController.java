@@ -74,4 +74,13 @@ public class AccountController {
         accountService.deleteAccount(accountId , user.getId());
         return ResponseEntity.ok("Account deleted successfully");
     }
+
+
+
+    @GetMapping("/all")
+    public ResponseEntity<List<AccountDTO>> getAllAccounts(@RequestHeader("Authorization") String authorizationHeader) {
+        permissionUtils.checkAdminPermission(authorizationHeader);
+        List<AccountDTO> accounts = accountService.getAllAccounts();
+        return ResponseEntity.ok(accounts);
+    }
 }
