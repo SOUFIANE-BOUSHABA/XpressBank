@@ -3,6 +3,7 @@ package org.example.xpresbank.Mapper;
 import org.example.xpresbank.DTO.CreateTransactionDTO;
 import org.example.xpresbank.DTO.TransactionDTO;
 import org.example.xpresbank.Entity.Account;
+import org.example.xpresbank.Entity.Enums.Frequency;
 import org.example.xpresbank.Entity.Enums.TransactionType;
 import org.example.xpresbank.Entity.Transaction;
 import org.example.xpresbank.VM.TransactionVM;
@@ -12,16 +13,27 @@ import org.springframework.stereotype.Component;
 public class TransactionMapper {
 
     public Transaction toEntity(CreateTransactionDTO createTransactionDTO, Account sourceAccount, Account destinationAccount) {
-        return Transaction.builder()
+        String type = createTransactionDTO.getType();
+        if (type == null) {
+            throw new IllegalArgumentException("Transaction type cannot be null");
+        }
+
+        Transaction.TransactionBuilder transactionBuilder = Transaction.builder()
                 .sourceAccount(sourceAccount)
                 .destinationAccount(destinationAccount)
-                .type(TransactionType.valueOf(createTransactionDTO.getType().toUpperCase()))
+                .type(TransactionType.valueOf(type.toUpperCase()))
                 .amount(createTransactionDTO.getAmount())
-                .transactionFee(calculateTransactionFee(createTransactionDTO.getType(), createTransactionDTO.getAmount()))
+                .transactionFee(calculateTransactionFee(type, createTransactionDTO.getAmount()))
                 .status("PENDING")
-                .timestamp(new java.util.Date())
-                .build();
+                .timestamp(new java.util.Date());
+
+        if (createTransactionDTO.getFrequency() != null) {
+            transactionBuilder.frequency(Frequency.valueOf(createTransactionDTO.getFrequency().toUpperCase()));
+        }
+
+        return transactionBuilder.build();
     }
+
 
     public TransactionVM toTransactionVM(Transaction transaction, String message) {
         return TransactionVM.builder()
@@ -39,6 +51,11 @@ public class TransactionMapper {
 
 
     private double calculateTransactionFee(String type, double amount) {
+
+        if (type == null) {
+            throw new IllegalArgumentException("Transaction type cannot be null");
+        }
+
         switch (type.toUpperCase()) {
             case "CLASSIC":
                 return amount * 0.02;

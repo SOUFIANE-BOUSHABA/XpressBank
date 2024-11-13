@@ -49,17 +49,28 @@ public class TransactionService {
             throw new InsufficientFundsException("Insufficient funds in source account");
         }
 
-        Frequency frequency = Frequency.valueOf(createTransactionDTO.getFrequency().toUpperCase());
+        Frequency frequency = null;
+        if (createTransactionDTO.getFrequency() != null) {
+            frequency = Frequency.valueOf(createTransactionDTO.getFrequency().toUpperCase());
+        }
 
         Transaction transaction = transactionMapper.toEntity(createTransactionDTO, sourceAccount, destinationAccount);
         transaction.setCreatedBy(createdByUser);
-        transaction.setFrequency(frequency);
+
+        if (frequency != null) {
+            transaction.setFrequency(frequency);
+        }
+
         transaction.setEndDate(createTransactionDTO.getEndDate());
-        transaction.setNextScheduledDate(new Date());
+
+        if (createTransactionDTO.getType().equalsIgnoreCase("SCHEDULED")) {
+            transaction.setNextScheduledDate(new Date());
+        }
 
         Transaction savedTransaction = transactionRepository.save(transaction);
         return transactionMapper.toTransactionVM(savedTransaction, "Transaction created successfully, awaiting approval");
     }
+
 
 
 
