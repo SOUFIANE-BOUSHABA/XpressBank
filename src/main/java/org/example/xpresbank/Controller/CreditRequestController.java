@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/credit-requests")
+
 public class CreditRequestController {
 
     private final CreditRequestService creditRequestService;
@@ -45,12 +46,15 @@ public class CreditRequestController {
         User user = authService.getUserFromSession(token);
 
         if (!permissionUtils.isAdminOrEmployee(user)) {
-            throw new SecurityException("Unauthorized. Only ADMIN or EMPLOYEE users can view all credit requests.");
+            List<CreditRequestDTO> userCreditRequests = creditRequestService.getCreditRequestsByUserId(user.getId());
+            return ResponseEntity.ok(userCreditRequests);
         }
 
         List<CreditRequestDTO> creditRequests = creditRequestService.getAllCreditRequests();
         return ResponseEntity.ok(creditRequests);
     }
+
+
 
     @GetMapping("/{creditRequestId}")
     public ResponseEntity<CreditRequestDTO> getCreditRequestById(@RequestHeader("Authorization") String authorizationHeader,

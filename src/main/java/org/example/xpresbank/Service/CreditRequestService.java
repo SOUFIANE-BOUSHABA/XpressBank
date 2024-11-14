@@ -82,4 +82,11 @@ public class CreditRequestService {
             return creditRequestMapper.toCreditRequestVM(creditRequestRepository.save(creditRequest), "Credit request rejected successfully");
         }
     }
+
+
+    public List<CreditRequestDTO> getCreditRequestsByUserId(Long userId) {
+        return creditRequestRepository.findByUserId(userId).stream()
+                .map(creditRequestMapper::toCreditRequestDTO)
+                .collect(Collectors.toList());
+    }
 }

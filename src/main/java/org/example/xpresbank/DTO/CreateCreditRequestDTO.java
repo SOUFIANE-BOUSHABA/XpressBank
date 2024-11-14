@@ -10,4 +10,6 @@ import lombok.*;
 public class CreateCreditRequestDTO {
     private double amount;
     private double interestRate;
+    private String startDate;
+    private String endDate;
 }

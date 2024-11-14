@@ -32,6 +32,7 @@ public class CreditRequestMapper {
                 .interestRate(createCreditRequestDTO.getInterestRate())
                 .user(user)
                 .startDate(new Date())
+                .endDate(new Date())
                 .status(CreditRequestStatus.PENDING)
                 .eligibilityStatus("PENDING")
                 .build();
