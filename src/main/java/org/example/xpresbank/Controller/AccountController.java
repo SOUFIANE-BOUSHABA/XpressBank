@@ -42,8 +42,10 @@ public class AccountController {
     @GetMapping("/user/accounts")
     public ResponseEntity<List<AccountDTO>> getAccountsByUserId(@RequestHeader("Authorization") String authorizationHeader) {
         permissionUtils.checkUserPermission(authorizationHeader);
+
         String token = authorizationHeader.substring("Bearer ".length()).trim();
         User user = authService.getUserFromSession(token);
+
         List<AccountDTO> accounts = accountService.getAccountsByUserId(user.getId());
         return ResponseEntity.ok(accounts);
     }
