@@ -104,6 +104,36 @@ public class TransactionService {
     }
 
 
+
+    @Transactional
+    public TransactionVM rejectTransaction(Long transactionId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found with ID: " + transactionId));
+
+        if (!transaction.getStatus().equals("PENDING")) {
+            throw new IllegalStateException("Transaction is not in a pending state");
+        }
+
+        transaction.setStatus("REJECTED");
+        Transaction rejectedTransaction = transactionRepository.save(transaction);
+
+        return transactionMapper.toTransactionVM(rejectedTransaction, "Transaction rejected successfully");
+    }
+
+    @Transactional
+    public List<TransactionVM> getAllTransactions() {
+        List<Transaction> allTransactions = transactionRepository.findAll();
+        return allTransactions.stream()
+                .map(transaction -> transactionMapper.toTransactionVM(transaction, "Transaction fetched successfully"))
+                .collect(Collectors.toList());
+    }
+
+
+
+
+
+
+
     @Scheduled(cron = "0 * * * * ?")
     @Transactional
     public void processRecurringTransactions() {

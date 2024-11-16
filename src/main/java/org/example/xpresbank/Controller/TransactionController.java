@@ -48,9 +48,32 @@ public class TransactionController {
     @PutMapping("/approve/{transactionId}")
     public ResponseEntity<TransactionVM> approveTransaction(@RequestHeader("Authorization") String authorizationHeader,
                                                             @PathVariable Long transactionId) {
-        permissionUtils.CheckEmployPermission(authorizationHeader);
+
+        String token = authorizationHeader.substring("Bearer ".length()).trim();
+        User user = authService.getUserFromSession(token);
+        permissionUtils.isAdminOrEmployee(user);
         TransactionVM approvedTransaction = transactionService.approveTransaction(transactionId);
         return ResponseEntity.ok(approvedTransaction);
+    }
+
+
+    @PutMapping("/reject/{transactionId}")
+    public ResponseEntity<TransactionVM> rejectTransaction(@RequestHeader("Authorization") String authorizationHeader,   @PathVariable Long transactionId) {
+
+        String token = authorizationHeader.substring("Bearer ".length()).trim();
+        User user = authService.getUserFromSession(token);
+        permissionUtils.isAdminOrEmployee(user);
+        TransactionVM rejectedTransaction = transactionService.rejectTransaction(transactionId);
+        return ResponseEntity.ok(rejectedTransaction);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<TransactionVM>> getAllTransactions(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = authorizationHeader.substring("Bearer ".length()).trim();
+        User user = authService.getUserFromSession(token);
+        permissionUtils.isAdminOrEmployee(user);
+        List<TransactionVM> transactions = transactionService.getAllTransactions();
+        return ResponseEntity.ok(transactions);
     }
 
     @GetMapping("/user-transactions")
