@@ -45,13 +45,19 @@ public class AuthService {
         return userMapper.toUserVM(savedUser, "Registration successful");
     }
 
-    public String login(String username, String password) {
+    public  Map<String, String> login(String username, String password) {
         Optional<User> user = userRepository.findByUsername(username);
 
         if (user.isPresent() && user.get().getPassword().equals(password)) {
             String token = UUID.randomUUID().toString();
             sessions.put(token, user.get());
-            return token;
+
+            Map<String, String> loginResponse = new HashMap<>();
+            loginResponse.put("token", token);
+            loginResponse.put("role", user.get().getRole().getName().toString());
+            loginResponse.put("username", user.get().getUsername());
+
+            return loginResponse;
         } else {
             throw new UserNotFoundException("Invalid username or password");
         }
