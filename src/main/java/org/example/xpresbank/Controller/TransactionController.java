@@ -46,15 +46,31 @@ public class TransactionController {
 
 
     @PutMapping("/approve/{transactionId}")
-    public ResponseEntity<TransactionVM> approveTransaction(@RequestHeader("Authorization") String authorizationHeader,
-                                                            @PathVariable Long transactionId) {
+    public ResponseEntity<?> approveTransaction(@RequestHeader("Authorization") String authorizationHeader,
+                                                @PathVariable Long transactionId) {
+        try {
+            System.out.println("Started approving transaction: " + transactionId);
 
-        String token = authorizationHeader.substring("Bearer ".length()).trim();
-        User user = authService.getUserFromSession(token);
-        permissionUtils.isAdminOrEmployee(user);
-        TransactionVM approvedTransaction = transactionService.approveTransaction(transactionId);
-        return ResponseEntity.ok(approvedTransaction);
+            String token = authorizationHeader.substring("Bearer ".length()).trim();
+            System.out.println("Extracted token: " + token);
+
+            User user = authService.getUserFromSession(token);
+            System.out.println("User fetched from token: " + user.getUsername());
+
+            permissionUtils.isAdminOrEmployee(user);
+            System.out.println("User is authorized to approve transactions.");
+
+            TransactionVM approvedTransaction = transactionService.approveTransaction(transactionId);
+            System.out.println("Transaction approved successfully");
+
+            return ResponseEntity.ok(approvedTransaction);
+        } catch (Exception e) {
+            System.out.println("Error occurred while approving transaction: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
+
 
 
     @PutMapping("/reject/{transactionId}")

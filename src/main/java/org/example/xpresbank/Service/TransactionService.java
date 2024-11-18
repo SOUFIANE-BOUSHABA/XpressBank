@@ -76,32 +76,48 @@ public class TransactionService {
 
     @Transactional
     public TransactionVM approveTransaction(Long transactionId) {
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found with ID: " + transactionId));
+        try {
+            System.out.println("Started approveTransaction for ID: " + transactionId);
 
-        if (!transaction.getStatus().equals("PENDING")) {
-            throw new IllegalStateException("Transaction is not in a pending state");
+            Transaction transaction = transactionRepository.findById(transactionId)
+                    .orElseThrow(() -> new IllegalArgumentException("Transaction not found with ID: " + transactionId));
+            System.out.println("Transaction fetched successfully with status: " + transaction.getStatus());
+
+            if (!transaction.getStatus().equals("PENDING")) {
+                throw new IllegalStateException("Transaction is not in a pending state");
+            }
+
+            Account sourceAccount = transaction.getSourceAccount();
+            System.out.println("Fetched source account with balance: " + sourceAccount.getBalance());
+
+            Account destinationAccount = transaction.getDestinationAccount();
+            System.out.println("Fetched destination account");
+
+            if (sourceAccount.getBalance() < transaction.getAmount() + transaction.getTransactionFee()) {
+                throw new InsufficientFundsException("Insufficient funds to approve the transaction");
+            }
+
+            sourceAccount.setBalance(sourceAccount.getBalance() - transaction.getAmount() - transaction.getTransactionFee());
+            destinationAccount.setBalance(destinationAccount.getBalance() + transaction.getAmount());
+
+            System.out.println("Updating account balances...");
+
+            accountRepository.save(sourceAccount);
+            accountRepository.save(destinationAccount);
+
+            transaction.setStatus("APPROVED");
+            Transaction approvedTransaction = transactionRepository.save(transaction);
+
+            System.out.println("Transaction approved and saved successfully");
+
+            return transactionMapper.toTransactionVM(approvedTransaction, "Transaction approved successfully");
+        } catch (Exception e) {
+            System.out.println("Error in approveTransaction method: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-
-        Account sourceAccount = transaction.getSourceAccount();
-        Account destinationAccount = transaction.getDestinationAccount();
-
-        if (sourceAccount.getBalance() < transaction.getAmount() + transaction.getTransactionFee()) {
-            throw new InsufficientFundsException("Insufficient funds to approve the transaction");
-        }
-
-        sourceAccount.setBalance(sourceAccount.getBalance() - transaction.getAmount() - transaction.getTransactionFee());
-        destinationAccount.setBalance(destinationAccount.getBalance() + transaction.getAmount());
-
-        accountRepository.save(sourceAccount);
-        accountRepository.save(destinationAccount);
-
-        transaction.setStatus("APPROVED");
-        Transaction approvedTransaction = transactionRepository.save(transaction);
-        transactionRepository.save(approvedTransaction);
-
-        return transactionMapper.toTransactionVM(approvedTransaction, "Transaction approved successfully");
     }
+
 
 
 
